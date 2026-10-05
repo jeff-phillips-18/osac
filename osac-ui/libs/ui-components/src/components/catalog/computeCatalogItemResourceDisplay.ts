@@ -11,6 +11,7 @@ import type {
 
 import { bareMetalCatalogDiskImageLabel } from './bareMetalCatalogItemResourceDisplay';
 import {
+  CATALOG_RESOURCE_EMPTY_DISPLAY,
   catalogFieldPolicyIsConfigured,
   catalogResourceHasDisplayValue,
 } from './catalogFieldPolicyDisplay';
@@ -81,6 +82,25 @@ export const findComputeInstanceTypeForReference = (
     );
   }
   return undefined;
+};
+
+export const formatComputeCatalogInstanceType = (
+  fields: ComputeInstanceCatalogItemFields | undefined,
+  instanceType: InstanceType | undefined,
+  reference: InstanceTypeReference | undefined,
+): string | undefined => {
+  if (!catalogFieldPolicyIsConfigured(fields?.instanceType)) {
+    return undefined;
+  }
+  const label =
+    instanceType?.metadata?.displayName ||
+    instanceType?.metadata?.name ||
+    reference?.name ||
+    CATALOG_RESOURCE_EMPTY_DISPLAY;
+  if (!catalogResourceHasDisplayValue(label)) {
+    return undefined;
+  }
+  return label;
 };
 
 export const formatComputeCatalogVCpu = (

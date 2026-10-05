@@ -1,0 +1,5 @@
+.catalog-item-resources__hardware {
+  border-inline-start: var(--pf-t--global--border--width--100) solid
+    var(--pf-t--global--border--color--default);
+  padding-inline-start: var(--pf-t--global--spacer--md);
+}

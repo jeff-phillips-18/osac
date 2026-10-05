@@ -1,3 +1,5 @@
+import type { TFunction } from 'i18next';
+
 import type {
   ClusterCatalogItem,
   ClusterCatalogItemFields,
@@ -62,8 +64,63 @@ export const primaryClusterCatalogNodeSet = (
   return { key, nodeSet: items[key] };
 };
 
-export const formatClusterCatalogNodeSetName = (nodeSetKey: string): string =>
-  nodeSetKey.replace(/[-_]+/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
+export const clusterCatalogNodeSetEntries = (
+  items: Record<string, ClusterTemplateNodeSet> | undefined,
+): { key: string; nodeSet: ClusterTemplateNodeSet }[] => {
+  if (!items) {
+    return [];
+  }
+  return Object.keys(items)
+    .sort((a, b) => a.localeCompare(b))
+    .map((key) => ({ key, nodeSet: items[key] }));
+};
+
+export const formatClusterCatalogHostTypeLabel = (
+  hostType: HostType | undefined,
+  reference: HostTypeReference | undefined,
+): string => {
+  if (hostType?.title?.trim()) {
+    return hostType.title.trim();
+  }
+  if (hostType?.metadata?.name) {
+    return hostType.metadata.name;
+  }
+  if (reference?.name) {
+    return reference.name;
+  }
+  if (reference?.id) {
+    return reference.id;
+  }
+  return '—';
+};
+
+export const formatClusterCatalogNodeSetHostLabel = (
+  hostType: HostType | undefined,
+  reference: HostTypeReference | undefined,
+): string => {
+  if (hostType?.metadata?.name) {
+    return hostType.metadata.name;
+  }
+  if (reference?.name) {
+    return reference.name;
+  }
+  if (hostType?.title?.trim()) {
+    return hostType.title.trim();
+  }
+  if (reference?.id) {
+    return reference.id;
+  }
+  return '—';
+};
+
+export const formatClusterCatalogNodeSetDetail = (
+  nodeSet: ClusterTemplateNodeSet,
+  hostType: HostType | undefined,
+  t: TFunction,
+): string => {
+  const hostLabel = formatClusterCatalogNodeSetHostLabel(hostType, nodeSet.hostType);
+  return `${hostLabel} · ${t('{{count}} nodes', { count: nodeSet.size })}`;
+};
 
 export const findClusterVersionForReference = (
   versions: ClusterVersion[],
@@ -126,25 +183,6 @@ export const findHostTypeForReference = (
   return undefined;
 };
 
-export const formatClusterCatalogHostTypeLabel = (
-  hostType: HostType | undefined,
-  reference: HostTypeReference | undefined,
-): string => {
-  if (hostType?.title?.trim()) {
-    return hostType.title.trim();
-  }
-  if (hostType?.metadata?.name) {
-    return hostType.metadata.name;
-  }
-  if (reference?.name) {
-    return reference.name;
-  }
-  if (reference?.id) {
-    return reference.id;
-  }
-  return '—';
-};
-
 export const formatClusterCatalogVersionRow = (
   fields: ClusterCatalogItemFields | undefined,
   version: ClusterVersion | undefined,
@@ -159,6 +197,9 @@ export const formatClusterCatalogVersionRow = (
   }
   return label;
 };
+
+export const formatClusterCatalogNodeSetName = (nodeSetKey: string): string =>
+  nodeSetKey.replace(/[-_]+/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
 
 export const formatClusterCatalogNodeSetRow = (
   nodeSetsPolicy: ClusterNodeSetMapPolicy | undefined,

@@ -25,3 +25,22 @@ body {
   overflow-x: clip;
   overflow-y: auto;
 }
+
+/* Unselected items: keep default fill on hover/focus; show selected border treatment only */
+.pf-v6-c-toggle-group__button:not(.pf-m-selected):is(:hover, :focus) {
+  --pf-v6-c-toggle-group__button--hover--BackgroundColor: var(
+          --pf-t--global--background--color--control--default
+  );
+  --pf-v6-c-toggle-group__button--hover--before--BorderColor: var(
+          --pf-v6-c-toggle-group__button--m-selected--before--BorderColor
+  );
+  --pf-v6-c-toggle-group__button--hover--after--BorderWidth: var(
+          --pf-v6-c-toggle-group__button--m-selected--after--BorderWidth
+  );
+  --pf-v6-c-toggle-group__button--before--BorderWidth: var(
+          --pf-v6-c-toggle-group__button--m-selected--before--BorderWidth
+  );
+  --pf-v6-c-toggle-group__button--after--BorderColor: var(
+          --pf-v6-c-toggle-group__button--m-selected--after--BorderColor
+  );
+}

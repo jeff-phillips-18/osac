@@ -6,27 +6,33 @@ import {
   DescriptionListTerm,
   Flex,
   FlexItem,
+  Stack,
+  StackItem,
 } from '@patternfly/react-core';
 
 import { ClusterCatalogItem } from '@osac/types';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 import CatalogFieldEditabilityLabel from './CatalogFieldEditabilityLabel';
-import { catalogFieldPolicyBehavior } from './catalogFieldPolicyDisplay';
+import {
+  catalogFieldPolicyBehavior,
+  catalogFieldPolicyIsConfigured,
+} from './catalogFieldPolicyDisplay';
 import type { CatalogItemResourceLookups } from './catalogItemResourceLookups';
 import {
   clusterCatalogItemFields,
+  clusterCatalogNodeSetEntries,
   clusterNodeSetItemsFromPolicy,
   clusterNodeSetMapPolicy,
   clusterVersionReference,
   findClusterVersionForReference,
   findHostTypeForReference,
-  formatClusterCatalogHostTypeRow,
-  formatClusterCatalogNodeSetRow,
+  formatClusterCatalogNodeSetDetail,
   formatClusterCatalogVersionRow,
-  primaryClusterCatalogNodeSet,
 } from './clusterCatalogItemResourceDisplay';
 import { GuestOsIcon } from '../shared/GuestOsIcon';
+
+import './CatalogItemResources.css';
 
 interface ClusterCatalogItemResourcesProps {
   catalogItem: ClusterCatalogItem;
@@ -42,9 +48,10 @@ const ClusterCatalogItemResources = ({
   const versionReference = clusterVersionReference(fields);
   const nodeSetsPolicy = clusterNodeSetMapPolicy(fields);
   const nodeSetItems = clusterNodeSetItemsFromPolicy(nodeSetsPolicy);
-  const primaryNodeSet = primaryClusterCatalogNodeSet(nodeSetItems);
+  const nodeSetEntries = clusterCatalogNodeSetEntries(nodeSetItems);
   const versionPolicyBehavior = catalogFieldPolicyBehavior(fields?.version);
   const nodeSetsPolicyBehavior = catalogFieldPolicyBehavior(nodeSetsPolicy);
+  const showNodeSets = catalogFieldPolicyIsConfigured(nodeSetsPolicy);
 
   const { clusterVersions, hostTypes } = resourceLookups;
 
@@ -53,61 +60,75 @@ const ClusterCatalogItemResources = ({
     [clusterVersions, versionReference],
   );
 
-  const hostType = useMemo(
-    () => findHostTypeForReference(hostTypes, primaryNodeSet?.nodeSet.hostType),
-    [hostTypes, primaryNodeSet?.nodeSet.hostType],
+  const nodeSetRows = useMemo(
+    () =>
+      nodeSetEntries.map(({ key, nodeSet }) => ({
+        key,
+        detail: formatClusterCatalogNodeSetDetail(
+          nodeSet,
+          findHostTypeForReference(hostTypes, nodeSet.hostType),
+          t,
+        ),
+      })),
+    [hostTypes, nodeSetEntries, t],
   );
 
   const versionLabel = formatClusterCatalogVersionRow(fields, clusterVersion, versionReference);
   const showClusterVersionIcon = Boolean(versionReference || clusterVersion);
-  const nodeSetLabel = formatClusterCatalogNodeSetRow(nodeSetsPolicy, primaryNodeSet);
-  const hostTypeLabel = formatClusterCatalogHostTypeRow(nodeSetsPolicy, primaryNodeSet, hostType);
 
   return (
-    <DescriptionList isHorizontal isCompact>
-      <DescriptionListGroup>
-        <DescriptionListTerm>{t('Cluster version')}</DescriptionListTerm>
-        <DescriptionListDescription>
-          <Flex
-            flexWrap={{ default: 'nowrap' }}
-            gap={{ default: 'gapXs' }}
-            alignItems={{ default: 'alignItemsCenter' }}
-          >
-            {showClusterVersionIcon ? (
-              <FlexItem>
-                <GuestOsIcon os="rhel" size="sm" />
-              </FlexItem>
-            ) : null}
-            <FlexItem>{versionLabel || '-'}</FlexItem>
-            <FlexItem>
-              <CatalogFieldEditabilityLabel behavior={versionPolicyBehavior} />
-            </FlexItem>
-          </Flex>
-        </DescriptionListDescription>
-      </DescriptionListGroup>
-      <DescriptionListGroup>
-        <DescriptionListTerm>{t('Node set')}</DescriptionListTerm>
-        <DescriptionListDescription>
-          <Flex flexWrap={{ default: 'nowrap' }} gap={{ default: 'gapXs' }}>
-            <FlexItem>{nodeSetLabel || '-'}</FlexItem>
-            <FlexItem>
-              <CatalogFieldEditabilityLabel behavior={nodeSetsPolicyBehavior} />
-            </FlexItem>
-          </Flex>
-        </DescriptionListDescription>
-      </DescriptionListGroup>
-      <DescriptionListGroup>
-        <DescriptionListTerm>{t('Host type')}</DescriptionListTerm>
-        <DescriptionListDescription>
-          <Flex flexWrap={{ default: 'nowrap' }} gap={{ default: 'gapXs' }}>
-            <FlexItem>{hostTypeLabel || '-'}</FlexItem>
-            <FlexItem>
-              <CatalogFieldEditabilityLabel behavior={nodeSetsPolicyBehavior} />
-            </FlexItem>
-          </Flex>
-        </DescriptionListDescription>
-      </DescriptionListGroup>
-    </DescriptionList>
+    <Stack hasGutter>
+      <StackItem>
+        <DescriptionList isHorizontal isCompact>
+          <DescriptionListGroup>
+            <DescriptionListTerm>{t('Cluster version')}</DescriptionListTerm>
+            <DescriptionListDescription>
+              <Flex
+                flexWrap={{ default: 'nowrap' }}
+                gap={{ default: 'gapXs' }}
+                alignItems={{ default: 'alignItemsCenter' }}
+              >
+                {showClusterVersionIcon ? (
+                  <FlexItem>
+                    <GuestOsIcon os="rhel" size="sm" />
+                  </FlexItem>
+                ) : null}
+                <FlexItem>{versionLabel || '-'}</FlexItem>
+                <FlexItem>
+                  <CatalogFieldEditabilityLabel behavior={versionPolicyBehavior} />
+                </FlexItem>
+              </Flex>
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+        </DescriptionList>
+      </StackItem>
+      {showNodeSets ? (
+        <>
+          <StackItem>
+            <DescriptionList isHorizontal isCompact>
+              <DescriptionListGroup>
+                <DescriptionListTerm>{t('Node sets')}</DescriptionListTerm>
+                <DescriptionListDescription>
+                  <CatalogFieldEditabilityLabel behavior={nodeSetsPolicyBehavior} />
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+            </DescriptionList>
+          </StackItem>
+          {nodeSetRows.length > 0 ? (
+            <StackItem className="catalog-item-resources__hardware">
+              <DescriptionList isHorizontal isCompact>
+                {nodeSetRows.map(({ key, detail }) => (
+                  <DescriptionListGroup key={key}>
+                    <DescriptionListTerm>{key}</DescriptionListTerm>
+                    <DescriptionListDescription>{detail}</DescriptionListDescription>
+                  </DescriptionListGroup>
+                ))}
+              </DescriptionList>
+            </StackItem>
+          ) : null}
+        </>
+      ) : null}
+    </Stack>
   );
 };
 

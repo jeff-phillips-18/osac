@@ -11,6 +11,7 @@ import type {
 import { GuestOSFamily } from '@osac/types';
 
 import {
+  CATALOG_RESOURCE_EMPTY_DISPLAY,
   catalogFieldPolicyIsConfigured,
   catalogResourceHasDisplayValue,
 } from './catalogFieldPolicyDisplay';
@@ -83,6 +84,25 @@ export const findDiskImageForReference = (
     );
   }
   return undefined;
+};
+
+export const formatBareMetalCatalogInstanceType = (
+  fields: BareMetalInstanceCatalogItemFields | undefined,
+  instanceType: BareMetalInstanceType | undefined,
+  reference: BareMetalInstanceTypeReference | undefined,
+): string | undefined => {
+  if (!catalogFieldPolicyIsConfigured(fields?.instanceType)) {
+    return undefined;
+  }
+  const label =
+    instanceType?.metadata?.displayName ||
+    instanceType?.metadata?.name ||
+    reference?.name ||
+    CATALOG_RESOURCE_EMPTY_DISPLAY;
+  if (!catalogResourceHasDisplayValue(label)) {
+    return undefined;
+  }
+  return label;
 };
 
 export const formatBareMetalCatalogCpu = (
