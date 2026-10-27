@@ -626,13 +626,18 @@ export const createMockConnectTransport = (
       });
 
       router.service(VirtualNetworks, {
-        list: (req) => ({
-          items: virtualNetworks.filter(
+        list: (req) => {
+          const items = virtualNetworks.filter(
             (item) =>
               matchesReadyStateFilter(req.filter, item.status?.state) &&
               matchesVirtualNetworkScopeFilter(req.filter, undefined),
-          ),
-        }),
+          );
+          const total = virtualNetworks.length;
+          if (req.limit === 0) {
+            return { items: [], size: 0, total };
+          }
+          return { items, size: items.length, total };
+        },
         get: (req) => ({
           object: virtualNetworks.find((i) => i.id === req.id),
         }),
