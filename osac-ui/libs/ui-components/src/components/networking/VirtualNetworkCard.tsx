@@ -6,11 +6,16 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
   Divider,
+  Skeleton,
 } from '@patternfly/react-core';
 import RhUiZoneIcon from '@patternfly/react-icons/dist/esm/icons/rh-ui-zone-icon';
 
-import type { VirtualNetwork } from '@osac/types';
-import type { NatGatewayWithAddress } from '@osac/ui-components/api/v1/networking';
+import { SecurityGroups, Subnets, VirtualNetwork } from '@osac/types';
+import { useListResource } from '@osac/ui-components/api/use-resource';
+import {
+  NatGatewayWithAddress,
+  virtualNetworkScopeFilter,
+} from '@osac/ui-components/api/v1/networking';
 import VirtualNetworkActionsMenu from '@osac/ui-components/components/networking/VirtualNetworkActionsMenu';
 import ListPageCard from '@osac/ui-components/components/Page/ListPageCard';
 
@@ -23,18 +28,26 @@ import ResourceNameField from '../Resource/ResourceNameField';
 
 interface VirtualNetworkCardProps {
   virtualNetwork: VirtualNetwork;
-  subnetCount: number;
-  securityGroupCount: number;
   natGatewayWithAddress?: NatGatewayWithAddress;
 }
 
-const VirtualNetworkCard = ({
-  virtualNetwork,
-  subnetCount,
-  securityGroupCount,
-  natGatewayWithAddress,
-}: VirtualNetworkCardProps) => {
+const VirtualNetworkCard = ({ virtualNetwork, natGatewayWithAddress }: VirtualNetworkCardProps) => {
   const { t } = useTranslation();
+
+  const { data: subnetTotals, isLoading: subnetsLoading } = useListResource(Subnets, {
+    filter: virtualNetworkScopeFilter(virtualNetwork.id),
+    limit: 0,
+  });
+  const subnetCount = subnetTotals?.total ?? 0;
+
+  const { data: securityGroupTotals, isLoading: securityGroupsLoading } = useListResource(
+    SecurityGroups,
+    {
+      filter: virtualNetworkScopeFilter(virtualNetwork.id),
+      limit: 0,
+    },
+  );
+  const securityGroupCount = securityGroupTotals?.total ?? 0;
 
   return (
     <ListPageCard
@@ -60,11 +73,15 @@ const VirtualNetworkCard = ({
           <Divider />
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Subnets')}</DescriptionListTerm>
-            <DescriptionListDescription>{subnetCount}</DescriptionListDescription>
+            <DescriptionListDescription>
+              {subnetsLoading ? <Skeleton width="25px" /> : subnetCount}
+            </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Security groups')}</DescriptionListTerm>
-            <DescriptionListDescription>{securityGroupCount}</DescriptionListDescription>
+            <DescriptionListDescription>
+              {securityGroupsLoading ? <Skeleton width="25px" /> : securityGroupCount}
+            </DescriptionListDescription>
           </DescriptionListGroup>
         </DescriptionList>
       </CardBody>

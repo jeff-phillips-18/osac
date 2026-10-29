@@ -17,11 +17,7 @@ import {
 
 import { VirtualNetworks } from '@osac/types';
 import { useListResource } from '@osac/ui-components/api/use-resource';
-import {
-  useNatGateways,
-  useSecurityGroups,
-  useSubnets,
-} from '@osac/ui-components/api/v1/networking';
+import { useNatGateways } from '@osac/ui-components/api/v1/networking';
 import {
   STATE_FILTER_PARAM,
   VIRTUAL_NETWORK_STATE_FILTER_TO_ENUM,
@@ -76,43 +72,11 @@ export const VirtualNetworksListPage = () => {
     limit: 0,
   });
 
-  const { data: allSubnets = [] } = useSubnets();
-  const { data: allSecurityGroups = [] } = useSecurityGroups();
   const {
     natGatewaysByVirtualNetworkId,
     isLoading: isLoadingNatGateways,
     error: natGatewaysError,
   } = useNatGateways();
-
-  const subnetCountByVN = useMemo(
-    () =>
-      allSubnets.reduce(
-        (acc, subnet) => {
-          const vnId = subnet.spec?.virtualNetwork?.id;
-          if (vnId) {
-            acc[vnId] = (acc[vnId] || 0) + 1;
-          }
-          return acc;
-        },
-        {} as Record<string, number>,
-      ),
-    [allSubnets],
-  );
-
-  const securityGroupCountByVN = useMemo(
-    () =>
-      allSecurityGroups.reduce(
-        (acc, securityGroup) => {
-          const vnId = securityGroup.spec?.virtualNetwork?.id;
-          if (vnId) {
-            acc[vnId] = (acc[vnId] || 0) + 1;
-          }
-          return acc;
-        },
-        {} as Record<string, number>,
-      ),
-    [allSecurityGroups],
-  );
 
   const items = data?.items ?? [];
   const totalItems = totalsData?.total ?? 0;
@@ -217,8 +181,6 @@ export const VirtualNetworksListPage = () => {
                     <GalleryItem key={vn.id}>
                       <VirtualNetworkCard
                         virtualNetwork={vn}
-                        subnetCount={subnetCountByVN[vn.id] || 0}
-                        securityGroupCount={securityGroupCountByVN[vn.id] || 0}
                         natGatewayWithAddress={natGatewaysByVirtualNetworkId[vn.id]}
                       />
                     </GalleryItem>
@@ -227,8 +189,6 @@ export const VirtualNetworksListPage = () => {
               ) : (
                 <VirtualNetworkTable
                   virtualNetworks={items}
-                  subnetCountByVirtualNetworkId={subnetCountByVN}
-                  securityGroupCountByVirtualNetworkId={securityGroupCountByVN}
                   natGatewaysByVirtualNetworkId={natGatewaysByVirtualNetworkId}
                 />
               )}

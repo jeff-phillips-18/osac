@@ -644,13 +644,18 @@ export const createMockConnectTransport = (
       });
 
       router.service(Subnets, {
-        list: (req) => ({
-          items: subnets.filter(
+        list: (req) => {
+          const items = subnets.filter(
             (item) =>
               matchesReadyStateFilter(req.filter, item.status?.state) &&
               matchesVirtualNetworkScopeFilter(req.filter, item.spec?.virtualNetwork?.id),
-          ),
-        }),
+          );
+          const total = items.length;
+          if (req.limit === 0) {
+            return { items: [], size: 0, total };
+          }
+          return { items, size: items.length, total };
+        },
         get: (req) => {
           if (overrides.onSubnetGet) {
             return overrides.onSubnetGet(req);
@@ -662,13 +667,18 @@ export const createMockConnectTransport = (
       });
 
       router.service(SecurityGroups, {
-        list: (req) => ({
-          items: securityGroups.filter(
+        list: (req) => {
+          const items = securityGroups.filter(
             (item) =>
               matchesReadyStateFilter(req.filter, item.status?.state) &&
               matchesVirtualNetworkScopeFilter(req.filter, item.spec?.virtualNetwork?.id),
-          ),
-        }),
+          );
+          const total = items.length;
+          if (req.limit === 0) {
+            return { items: [], size: 0, total };
+          }
+          return { items, size: items.length, total };
+        },
       });
 
       router.service(InstanceTypes, {

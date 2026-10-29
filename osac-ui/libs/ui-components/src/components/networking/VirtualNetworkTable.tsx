@@ -1,28 +1,19 @@
 import { useMemo } from 'react';
-import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import { Table, Tbody, Th, Thead, Tr } from '@patternfly/react-table';
 
 import type { VirtualNetwork } from '@osac/types';
 import type { NatGatewayWithAddress } from '@osac/ui-components/api/v1/networking';
-import VirtualNetworkActionsMenu from '@osac/ui-components/components/networking/VirtualNetworkActionsMenu';
+import VirtualNetworkTableRow from '@osac/ui-components/components/networking/VirtualNetworkTableRow';
 
-import { CidrDisplay } from './CidrDisplay';
-import { getVirtualNetworkName } from './virtual-network-list-utils';
-import VirtualNetworkNatGatewayCell from './VirtualNetworkNatGatewayCell';
-import { VirtualNetworkStatusLabel } from './VirtualNetworkStatusLabel';
 import { useTranslation } from '../../hooks/useTranslation';
-import ResourceNameField from '../Resource/ResourceNameField';
 
 interface VirtualNetworkTableProps {
   virtualNetworks: VirtualNetwork[];
-  subnetCountByVirtualNetworkId: Record<string, number>;
-  securityGroupCountByVirtualNetworkId: Record<string, number>;
   natGatewaysByVirtualNetworkId: Record<string, NatGatewayWithAddress>;
 }
 
 const VirtualNetworkTable = ({
   virtualNetworks,
-  subnetCountByVirtualNetworkId,
-  securityGroupCountByVirtualNetworkId,
   natGatewaysByVirtualNetworkId,
 }: VirtualNetworkTableProps) => {
   const { t } = useTranslation();
@@ -55,33 +46,12 @@ const VirtualNetworkTable = ({
       </Thead>
       <Tbody>
         {virtualNetworks.map((vn) => (
-          <Tr key={vn.id}>
-            <Td dataLabel={columnLabels.name}>
-              <ResourceNameField
-                resource={vn}
-                title={getVirtualNetworkName(vn)}
-                detailsUrl={`/networking/virtual-networks/${vn.id}`}
-              />
-            </Td>
-            <Td dataLabel={columnLabels.status}>
-              <VirtualNetworkStatusLabel state={vn.status?.state} />
-            </Td>
-            <Td dataLabel={columnLabels.ipV4cidr}>
-              <CidrDisplay ipv4Cidr={vn.spec?.ipv4Cidr} />
-            </Td>
-            <Td dataLabel={columnLabels.subnets}>{subnetCountByVirtualNetworkId[vn.id] || 0}</Td>
-            <Td dataLabel={columnLabels.securityGroups}>
-              {securityGroupCountByVirtualNetworkId[vn.id] || 0}
-            </Td>
-            <Td dataLabel={columnLabels.natGateway}>
-              <VirtualNetworkNatGatewayCell
-                natGatewayWithAddress={natGatewaysByVirtualNetworkId[vn.id]}
-              />
-            </Td>
-            <Td dataLabel={columnLabels.actions} isActionCell>
-              <VirtualNetworkActionsMenu virtualNetwork={vn} />
-            </Td>
-          </Tr>
+          <VirtualNetworkTableRow
+            key={vn.id}
+            columnLabels={columnLabels}
+            virtualNetwork={vn}
+            natGatewayWithAddress={natGatewaysByVirtualNetworkId[vn.id]}
+          />
         ))}
       </Tbody>
     </Table>

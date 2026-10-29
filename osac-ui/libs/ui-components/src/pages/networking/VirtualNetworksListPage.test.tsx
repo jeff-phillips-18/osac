@@ -34,6 +34,12 @@ const subnets = [
     spec: { virtualNetwork: { id: 'vn-1' }, ipv4Cidr: '10.0.1.0/24' },
     status: { state: SubnetState.READY },
   },
+  {
+    id: 'subnet-2',
+    metadata: { name: 'subnet-b' },
+    spec: { virtualNetwork: { id: 'vn-1' }, ipv4Cidr: '10.0.2.0/24' },
+    status: { state: SubnetState.READY },
+  },
 ] as Subnet[];
 
 const securityGroups = [
@@ -187,11 +193,31 @@ describe('VirtualNetworksListPage', () => {
 
     expect(await screen.findByText('Security groups')).toBeInTheDocument();
     const table = screen.getByRole('grid');
-    const rows = within(table).getAllByRole('row');
-    const prodRow = rows.find((row) => within(row).queryByRole('link', { name: 'vn-prod' }));
-    expect(prodRow).toBeDefined();
-    expect(getTableCellByLabel(prodRow as HTMLElement, 'Subnets')).toHaveTextContent('1');
-    expect(getTableCellByLabel(prodRow as HTMLElement, 'Security groups')).toHaveTextContent('1');
+    await waitFor(() => {
+      const rows = within(table).getAllByRole('row');
+      const prodRow = rows.find((row) => within(row).queryByRole('link', { name: 'vn-prod' }));
+      expect(prodRow).toBeDefined();
+      expect(getTableCellByLabel(prodRow as HTMLElement, 'Subnets')).toHaveTextContent('2');
+      expect(getTableCellByLabel(prodRow as HTMLElement, 'Security groups')).toHaveTextContent('1');
+    });
+  });
+
+  it('shows subnet and security group counts on cards', async () => {
+    localStorage.setItem(getViewTypePrefKey('virtual-networks'), 'cards');
+    renderPage();
+
+    const prodCard = (await screen.findByRole('link', { name: 'vn-prod' })).closest(
+      '.pf-v6-c-card',
+    );
+    expect(prodCard).toBeDefined();
+    await waitFor(() => {
+      expect(within(prodCard as HTMLElement).getByText('Subnets')).toBeInTheDocument();
+      const terms = within(prodCard as HTMLElement).getAllByText('Subnets');
+      const subnetGroup = terms[0].closest('.pf-v6-c-description-list__group');
+      expect(subnetGroup).toHaveTextContent('2');
+      const securityGroupTerm = within(prodCard as HTMLElement).getByText('Security groups');
+      expect(securityGroupTerm.closest('.pf-v6-c-description-list__group')).toHaveTextContent('1');
+    });
   });
 
   it('fetches NAT gateways once for the table', async () => {
